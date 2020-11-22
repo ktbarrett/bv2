@@ -1,39 +1,14 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Iterable, Type, Any, overload, Union
+from typing import Optional, Iterable, Type, Any, overload
 from functools import cached_property, lru_cache
 
 
-class _VectorParametizer(ABCMeta):
+class _ElemTypeParametizer(ABCMeta):
 
     @lru_cache(maxsize=None)  # unbounded because we always want to return the same elem_type-bounded Vector type
-    def _parameterize_elem_type(cls, arg: type) -> 'Vector':
+    def __getitem__(cls, arg: type) -> 'Vector':
         name = "{}[{}]".format(cls.__qualname__, arg.__qualname__)
-        return type(name, (_ElemTypeMixin, cls), {'_ElemType': arg})
-
-    def _parameterize_bounds(cls, arg: slice) -> 'Vector':
-        left = arg.start if arg.start is not None else 1
-        right = arg.stop if arg.stop is not None else 1
-        ascending = arg.step if arg.step is not None else (right >= left)
-        ascending_step = 1 if ascending else -1
-        name = "{}[{}:{}:{}]".format(cls.__qualname__, left, right, ascending_step)
-        return type(name, (_BoundsMixin, cls), {
-            '_left': left,
-            '_right': right,
-            '_ascending': ascending})
-
-    def __getitem__(cls, arg: Union[type, slice]) -> 'Vector':
-        if not issubclass(cls, _ElemTypeMixin):
-            if not isinstance(arg, type):
-                raise TypeError()
-            else:
-                return cls._parameterize_elem_type(arg)
-        elif not issubclass(cls, _BoundsMixin):
-            if not isinstance(arg, slice):
-                raise TypeError(repr(arg))
-            else:
-                return cls._parameterize_bounds(arg)
-        else:
-            raise TypeError()
+        return _BoundTypeParameterizer(name, (_ElemTypeMixin, cls), {'_ElemType': arg})
 
 
 class _ElemTypeMixin:
@@ -46,6 +21,20 @@ class _ElemTypeMixin:
     @cached_property
     def VectorType(self) -> 'Vector':
         return Vector[self._ElemType]
+
+
+class _BoundTypeParameterizer(_ElemTypeParametizer):
+
+    def __getitem__(cls, arg: slice) -> 'Vector':
+        left = arg.start if arg.start is not None else 1
+        right = arg.stop if arg.stop is not None else 1
+        ascending = arg.step if arg.step is not None else (right >= left)
+        ascending_step = 1 if ascending else -1
+        name = "{}[{}:{}:{}]".format(cls.__qualname__, left, right, ascending_step)
+        return _FinishedParametizer(name, (_BoundsMixin, cls), {
+            '_left': left,
+            '_right': right,
+            '_ascending': ascending})
 
 
 class _BoundsMixin:
@@ -74,7 +63,13 @@ class _BoundsMixin:
         return max(leng, 0)  # supports VHDL's null arrays
 
 
-class Vector(metaclass=_VectorParametizer):
+class _FinishedParametizer(_BoundTypeParameterizer):
+
+    def __getitem__(cls, arg: Any) -> None:
+        raise TypeError("'{}' is not subscriptable".format(cls.__qualname__))
+
+
+class Vector(metaclass=_ElemTypeParametizer):
 
     def __init__(self, value: Optional[Iterable] = None):
         if value is None:
