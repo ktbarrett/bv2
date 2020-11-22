@@ -14,6 +14,7 @@ def test_constructors():
     with pytest.raises(ValueError):
         Logic('j')
     _ = Logic(Logic(0))
+    Logic()
 
 
 def test_comparison():

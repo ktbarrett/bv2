@@ -1,3 +1,4 @@
+from typing import Optional
 from functools import lru_cache
 
 
@@ -17,6 +18,7 @@ class Logic:
         'H': 1,
         'h': 1,
         # unknown, unassigned, and weak unknown
+        None: 2,
         'X': 2,
         'x': 2,
         'U': 2,
@@ -28,7 +30,7 @@ class Logic:
         'z': 3}
 
     @lru_cache
-    def __new__(cls, value):
+    def __new__(cls, value: Optional = None):
         self = object.__new__(cls)
         if isinstance(value, Logic):
             self._repr = value._repr
