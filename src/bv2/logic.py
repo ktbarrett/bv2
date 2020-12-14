@@ -29,7 +29,7 @@ class Logic:
         'Z': 3,
         'z': 3}
 
-    @lru_cache
+    @lru_cache(maxsize=None)
     def __new__(cls, value: Optional = None):
         self = object.__new__(cls)
         if isinstance(value, Logic):
