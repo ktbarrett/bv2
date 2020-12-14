@@ -28,7 +28,15 @@ class _BoundTypeParameterizer(_ElemTypeParametizer):
     def __getitem__(cls, arg: slice) -> 'Vector':
         left = arg.start if arg.start is not None else 1
         right = arg.stop if arg.stop is not None else 1
-        ascending = arg.step if arg.step is not None else (right >= left)
+        if arg.step is not None:
+            if arg.step == 1:
+                ascending = True
+            elif arg.step == -1:
+                ascending = False
+            else:
+                raise ValueError("Invalid step value. Must be either 1 or -1.")
+        else:
+            ascending = right >= 1
         ascending_step = 1 if ascending else -1
         name = "{}[{}:{}:{}]".format(cls.__qualname__, left, right, ascending_step)
         return _FinishedParametizer(name, (_BoundsMixin, cls), {
