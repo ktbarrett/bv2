@@ -1,5 +1,5 @@
 from typing import Optional
-from functools import lru_cache
+from bv2.utils import cache
 
 
 class Logic:
@@ -29,7 +29,7 @@ class Logic:
         'Z': 3,
         'z': 3}
 
-    @lru_cache(maxsize=None)
+    @cache
     def __new__(cls, value: Optional = None):
         self = object.__new__(cls)
         if isinstance(value, Logic):
@@ -41,7 +41,7 @@ class Logic:
                 raise ValueError("{!r} is not a {} literal".format(value, type(self).__qualname__)) from None
         return self
 
-    @lru_cache
+    @cache
     def __and__(self, other):
         if not isinstance(other, Logic):
             try:
@@ -54,11 +54,11 @@ class Logic:
             ('0', 'X', 'X', 'X'),
             ('0', 'X', 'X', 'X'))[self._repr][other._repr])
 
-    @lru_cache
+    @cache
     def __rand__(self, other):
         return self & other
 
-    @lru_cache
+    @cache
     def __or__(self, other):
         if not isinstance(other, Logic):
             try:
@@ -71,11 +71,11 @@ class Logic:
             ('X', '1', 'X', 'X'),
             ('X', '1', 'X', 'X'))[self._repr][other._repr])
 
-    @lru_cache
+    @cache
     def __ror__(self, other):
         return self | other
 
-    @lru_cache
+    @cache
     def __xor__(self, other):
         if not isinstance(other, Logic):
             try:
@@ -88,15 +88,15 @@ class Logic:
             ('X', 'X', 'X', 'X'),
             ('X', 'X', 'X', 'X'))[self._repr][other._repr])
 
-    @lru_cache
+    @cache
     def __rxor__(self, other):
         return self ^ other
 
-    @lru_cache
+    @cache
     def __invert__(self):
         return Logic(('1', '0', 'X', 'X')[self._repr])
 
-    @lru_cache
+    @cache
     def __eq__(self, other):
         if not isinstance(other, Logic):
             try:
@@ -105,21 +105,21 @@ class Logic:
                 return NotImplemented
         return self._repr == other._repr
 
-    @lru_cache
+    @cache
     def __repr__(self):
         return "{}({!r})".format(type(self).__qualname__, str(self))
 
-    @lru_cache
+    @cache
     def __str__(self):
         return ('0', '1', 'X', 'Z')[self._repr]
 
-    @lru_cache
+    @cache
     def __bool__(self):
         if self._repr < 2:
             return bool(self._repr)
         raise ValueError()
 
-    @lru_cache
+    @cache
     def __int__(self):
         if self._repr < 2:
             return self._repr
