@@ -2,7 +2,7 @@ from bv2 import Vector
 import pytest
 
 
-def test_():
+def test_types():
 
     IntVector = Vector[int]
     assert issubclass(IntVector, Vector)

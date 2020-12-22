@@ -1,12 +1,14 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Iterable, Type, Any, overload
-from functools import cached_property, lru_cache
+from functools import cached_property
+from bv2.utils import weak_cache
 
 
 class _ElemTypeParametizer(ABCMeta):
 
-    @lru_cache(maxsize=None)  # unbounded because we always want to return the same elem_type-bounded Vector type
+    @weak_cache
     def __getitem__(cls, arg: type) -> 'Vector':
+        print("Running!")
         name = "{}[{}]".format(cls.__qualname__, arg.__qualname__)
         return _BoundTypeParameterizer(name, (_ElemTypeMixin, cls), {'_ElemType': arg})
 
@@ -25,6 +27,7 @@ class _ElemTypeMixin:
 
 class _BoundTypeParameterizer(_ElemTypeParametizer):
 
+    @weak_cache
     def __getitem__(cls, arg: slice) -> 'Vector':
         left = arg.start if arg.start is not None else 1
         right = arg.stop if arg.stop is not None else 1
