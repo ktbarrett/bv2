@@ -22,7 +22,7 @@ class Array:
     """
 
     @staticmethod
-    def _conversion(value: Any = None) -> Any:
+    def _conversion(value: Optional[Any] = None) -> Any:
         """
         Takes a value and converts it to the element type of the Array
 
@@ -223,7 +223,7 @@ class Array:
             value=self._value,
         )
 
-    def __eq__(self, other: "Array") -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         if len(self) != len(other):
