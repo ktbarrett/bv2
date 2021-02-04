@@ -4,11 +4,11 @@ from typing import Optional
 def singleton(*args, **kwargs):
     def helper(f):
         return f(*args, **kwargs)
+
     return helper
 
 
 class Logic:
-
     def __rand__(self, other):
         return self & other
 
@@ -179,37 +179,40 @@ _conversions = {
     # 0 and weak 0
     False: _0,
     0: _0,
-    '0': _0,
-    'L': _0,
-    'l': _0,
+    "0": _0,
+    "L": _0,
+    "l": _0,
     _0: _0,
     # 1 and weak 1
     True: _1,
     1: _1,
-    '1': _1,
-    'H': _1,
-    'h': _1,
+    "1": _1,
+    "H": _1,
+    "h": _1,
     _1: _1,
     # unknown, unassigned, and weak unknown
     None: X,
-    'X': X,
-    'x': X,
-    'U': X,
-    'u': X,
-    'W': X,
-    'w': X,
+    "X": X,
+    "x": X,
+    "U": X,
+    "u": X,
+    "W": X,
+    "w": X,
     X: X,
     # high impedance
-    'Z': Z,
-    'z': Z,
-    Z: Z}
+    "Z": Z,
+    "z": Z,
+    Z: Z,
+}
 
 
 def _construct(cls, value: Optional = None):
     try:
         return _conversions[value]
     except KeyError:
-        raise ValueError("{!r} is not a {} literal".format(value, cls.__qualname__)) from None
+        raise ValueError(
+            "{!r} is not a {} literal".format(value, cls.__qualname__)
+        ) from None
 
 
 Logic.__new__ = _construct

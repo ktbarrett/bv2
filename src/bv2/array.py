@@ -3,17 +3,6 @@ from functools import cached_property, reduce
 import operator
 
 
-def _ascending(left: int, right: int) -> bool:
-    return left < right
-
-
-def _length(left: int, right: int) -> int:
-    if _ascending(left, right):
-        return right - left + 1
-    else:
-        return left - right + 1
-
-
 class Array:
     """
     Fixed-size, arbitrarily-indexed, heterogenous array type
@@ -53,8 +42,9 @@ class Array:
             if len(self._value) != len(self):
                 raise ValueError(
                     "Init value of length '{}'' does not fit in given bounds {}".format(
-                        len(self._value),
-                        (left, right)))
+                        len(self._value), (left, right)
+                    )
+                )
 
     @property
     def left(self) -> int:
@@ -104,7 +94,7 @@ class Array:
         """Returns element at given index"""
 
     @overload
-    def __getitem__(self, item: slice) -> 'Array':
+    def __getitem__(self, item: slice) -> "Array":
         """
         Returns new array containing the given slice
 
@@ -132,15 +122,24 @@ class Array:
                 raise IndexError("don't specify the step")
             ascending = _ascending(left, right)
             if ascending is not self.ascending:
-                raise IndexError("expecting {self_ascending} slice, got {ascending} slice".format(
-                    self_ascending=('ascending' if self.ascending else 'descending'),
-                    ascending=('ascending' if ascending else 'descending')))
+                raise IndexError(
+                    "expecting {self_ascending} slice, got {ascending} slice".format(
+                        self_ascending=(
+                            "ascending" if self.ascending else "descending"
+                        ),
+                        ascending=("ascending" if ascending else "descending"),
+                    )
+                )
             left_i = self._translate_index(left)
             right_i = self._translate_index(right)
-            value = self._value[left_i:(right_i + 1)]
+            value = self._value[left_i : (right_i + 1)]
             return type(self)(left=left, right=right, value=value)
         else:
-            raise TypeError("indexes must be ints or slices, not '{type}'".format(type=type(item).__name__))
+            raise TypeError(
+                "indexes must be ints or slices, not '{type}'".format(
+                    type=type(item).__name__
+                )
+            )
 
     @overload
     def __setitem__(self, item: int, value: Any) -> None:
@@ -177,9 +176,14 @@ class Array:
                 raise IndexError("don't specify the step")
             ascending = _ascending(left, right)
             if ascending is not self.ascending:
-                raise IndexError("expecting {self_ascending} slice, got {ascending} slice".format(
-                    self_ascending=('ascending' if self.ascending else 'descending'),
-                    ascending=('ascending' if ascending else 'descending')))
+                raise IndexError(
+                    "expecting {self_ascending} slice, got {ascending} slice".format(
+                        self_ascending=(
+                            "ascending" if self.ascending else "descending"
+                        ),
+                        ascending=("ascending" if ascending else "descending"),
+                    )
+                )
             left_i = self._translate_index(left)
             right_i = self._translate_index(right)
             length = _length(left_i, right_i)
@@ -187,11 +191,16 @@ class Array:
             if len(value) != length:
                 raise ValueError(
                     "value of length '{value_length}'' not the same length as the slice {slice_length}".format(
-                        value_length=len(value),
-                        slice_length=length))
-            self._value[left_i:(right_i + 1)] = value
+                        value_length=len(value), slice_length=length
+                    )
+                )
+            self._value[left_i : (right_i + 1)] = value
         else:
-            raise TypeError("indexes must be ints or slices, not '{type}'".format(type=type(item).__name__))
+            raise TypeError(
+                "indexes must be ints or slices, not '{type}'".format(
+                    type=type(item).__name__
+                )
+            )
 
     def _translate_index(self, index: int) -> int:
         if self.ascending:
@@ -199,10 +208,11 @@ class Array:
         else:
             idx = self.left - index
         if idx < 0 or len(self._value) <= idx:
-            raise IndexError("Index out of bounds {left}, {right}): {index}".format(
-                left=self.left,
-                right=self.right,
-                index=index))
+            raise IndexError(
+                "Index out of bounds {left}, {right}): {index}".format(
+                    left=self.left, right=self.right, index=index
+                )
+            )
         return idx
 
     def __repr__(self) -> str:
@@ -210,9 +220,10 @@ class Array:
             cls_name=type(self).__name__,
             left=self.left,
             right=self.right,
-            value=self._value)
+            value=self._value,
+        )
 
-    def __eq__(self, other: 'Array') -> bool:
+    def __eq__(self, other: "Array") -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         if len(self) != len(other):
@@ -223,3 +234,14 @@ class Array:
 
     def __hash__(self) -> int:
         return reduce(operator.xor, (hash(v) for v in self))
+
+
+def _ascending(left: int, right: int) -> bool:
+    return left < right
+
+
+def _length(left: int, right: int) -> int:
+    if _ascending(left, right):
+        return right - left + 1
+    else:
+        return left - right + 1
