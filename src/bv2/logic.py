@@ -1,215 +1,129 @@
-from typing import Optional
-
-
-def singleton(*args, **kwargs):
-    def helper(f):
-        return f(*args, **kwargs)
-    return helper
+from typing import Optional, List, Any
 
 
 class Logic:
 
-    def __rand__(self, other):
+    _repr_map = {
+        # 0 and weak 0
+        False: 0,
+        0: 0,
+        "0": 0,
+        "L": 0,
+        "l": 0,
+        # 1 and weak 1
+        True: 1,
+        1: 1,
+        "1": 1,
+        "H": 1,
+        "h": 1,
+        # unknown, unassigned, and weak unknown
+        None: 2,
+        "X": 2,
+        "x": 2,
+        "U": 2,
+        "u": 2,
+        "W": 2,
+        "w": 2,
+        # high impedance
+        "Z": 3,
+        "z": 3,
+    }
+
+    _and_table: List[List["Logic"]]
+    _or_table: List[List["Logic"]]
+    _xor_table: List[List["Logic"]]
+    _not_table: List["Logic"]
+
+    def __init__(self, value: Optional[Any] = None):
+        try:
+            self._repr = self._repr_map[value]
+        except KeyError:
+            raise ValueError(
+                "{value!r} is not a {self_type}".format(
+                    value=value, self_type=type(self).__name__
+                )
+            ) from None
+
+    def __and__(self, other: object) -> "Logic":
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._and_table[self._repr][other._repr]
+
+    def __rand__(self, other: object) -> "Logic":
         return self & other
 
-    def __ror__(self, other):
+    def __or__(self, other: object) -> "Logic":
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return Logic(self._or_table[self._repr][other._repr])
+
+    def __ror__(self, other: object) -> "Logic":
         return self | other
 
-    def __rxor__(self, other):
+    def __xor__(self, other: object) -> "Logic":
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return Logic(self._xor_table[self._repr][other._repr])
+
+    def __rxor__(self, other: object) -> "Logic":
         return self ^ other
 
-    def __repr__(self):
-        return "Logic({!r})".format(str(self))
+    def __invert__(self) -> "Logic":
+        return Logic(self._not_table[self._repr])
 
-    def __eq__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
             return NotImplemented
-        return self is other
+        return self._repr == other._repr
 
-    __hash__ = object.__hash__
+    def __repr__(self) -> str:
+        return "{}({!r})".format(type(self).__name__, str(self))
 
+    def __str__(self) -> str:
+        return "01XZ"[self._repr]
 
-@singleton()
-class _0(Logic):
-    __slots__ = ()
+    def __bool__(self) -> bool:
+        if self._repr < 2:
+            return bool(self._repr)
+        raise ValueError("Cannot convert non-0/1 value to bool")
 
-    def __and__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        return _0
+    def __int__(self) -> int:
+        if self._repr < 2:
+            return self._repr
+        raise ValueError("Cannot convert non-0/1 value to int")
 
-    def __or__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is X or other is Z:
-            return X
-        else:
-            return other
-
-    def __xor__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is X or other is Z:
-            return X
-        elif other is _1:
-            return _1
-        else:
-            return _0
-
-    def __invert__(self):
-        return _1
-
-    def __str__(self):
-        return "0"
-
-    def __bool__(self):
-        return False
-
-    def __int__(self):
-        return 0
+    def __hash__(self) -> int:
+        return self._repr
 
 
-@singleton()
-class _1(Logic):
-    __slots__ = ()
+Logic._repr_map.update(
+    {
+        Logic("0"): 0,
+        Logic("1"): 1,
+        Logic("X"): 2,
+        Logic("Z"): 3,
+    }
+)
 
-    def __and__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is X or other is Z:
-            return X
-        else:
-            return other
+Logic._and_table = [
+    [Logic(v) for v in "0000"],
+    [Logic(v) for v in "01XX"],
+    [Logic(v) for v in "0XXX"],
+    [Logic(v) for v in "0XXX"],
+]
 
-    def __or__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        return _1
+Logic._or_table = [
+    [Logic(v) for v in "01XX"],
+    [Logic(v) for v in "1111"],
+    [Logic(v) for v in "X1XX"],
+    [Logic(v) for v in "X1XX"],
+]
 
-    def __xor__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is X or other is Z:
-            return X
-        elif other is _0:
-            return _1
-        else:
-            return _0
+Logic._xor_table = [
+    [Logic(v) for v in "01XX"],
+    [Logic(v) for v in "10XX"],
+    [Logic(v) for v in "XXXX"],
+    [Logic(v) for v in "XXXX"],
+]
 
-    def __invert__(self):
-        return _0
-
-    def __str__(self):
-        return "1"
-
-    def __bool__(self):
-        return True
-
-    def __int__(self):
-        return 1
-
-
-@singleton()
-class X(Logic):
-    __slots__ = ()
-
-    def __and__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is _0:
-            return _0
-        else:
-            return X
-
-    def __or__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        if other is _1:
-            return _1
-        else:
-            return X
-
-    def __xor__(self, other):
-        try:
-            other = Logic(other)
-        except ValueError:
-            return NotImplemented
-        return X
-
-    def __invert__(self):
-        return X
-
-    def __str__(self):
-        return "X"
-
-    def __bool__(self):
-        raise ValueError("Cannot cast Logic value {!r} to bool".format(str(self)))
-
-    def __int__(self):
-        raise ValueError("Cannot cast Logic value {!r} to int".format(str(self)))
-
-
-@singleton()
-class Z(type(X)):
-    __slots__ = ()
-
-    def __str__(self):
-        return "Z"
-
-
-_conversions = {
-    # 0 and weak 0
-    False: _0,
-    0: _0,
-    '0': _0,
-    'L': _0,
-    'l': _0,
-    _0: _0,
-    # 1 and weak 1
-    True: _1,
-    1: _1,
-    '1': _1,
-    'H': _1,
-    'h': _1,
-    _1: _1,
-    # unknown, unassigned, and weak unknown
-    None: X,
-    'X': X,
-    'x': X,
-    'U': X,
-    'u': X,
-    'W': X,
-    'w': X,
-    X: X,
-    # high impedance
-    'Z': Z,
-    'z': Z,
-    Z: Z}
-
-
-def _construct(cls, value: Optional = None):
-    try:
-        return _conversions[value]
-    except KeyError:
-        raise ValueError("{!r} is not a {} literal".format(value, cls.__qualname__)) from None
-
-
-Logic.__new__ = _construct
+Logic._not_table = [Logic(v) for v in "10XX"]
