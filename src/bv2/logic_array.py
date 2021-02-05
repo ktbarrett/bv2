@@ -1,53 +1,45 @@
 from bv2.logic import Logic
 from bv2.array import Array, _length
 
+from typing import Callable
 import itertools
 from functools import reduce, lru_cache
 import operator
 
 
-class LogicArray(Array[Logic]):
+class LogicArray(Array):
 
     _conversion = Logic
 
     def __str__(self) -> str:
         return "".join(map(str, self._value))
 
-    def __and__(self, other: object) -> "LogicArray":
-        """Bitwise logical 'and'"""
+    def _bitwise_op(self, other: object, operator: Callable[[Logic, Logic], Logic]):
         if not isinstance(other, type(self)):
             return NotImplemented
         if len(self) != len(other):
             raise ValueError("Arrays must be the same length for bitwise operations")
         return type(self)(
-            left=1, right=len(self), value=(v & w for v, w in zip(self, other))
+            left=1, right=len(self), value=(operator(v, w) for v, w in zip(self, other))
         )
+
+    def __and__(self, other: object) -> "LogicArray":
+        """Bitwise logical 'and'"""
+        return self._bitwise_op(other, operator.and_)
 
     def __rand__(self, other: object):
         return self & other
 
     def __or__(self, other: object) -> "LogicArray":
         """Bitwise logical 'or'"""
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        if len(self) != len(other):
-            raise ValueError("Arrays must be the same length for bitwise operations")
-        return type(self)(
-            left=1, right=len(self), value=(v | w for v, w in zip(self, other))
-        )
+        return self._bitwise_op(other, operator.or_)
 
     def __ror__(self, other: object) -> "LogicArray":
         return self | other
 
     def __xor__(self, other: object) -> "LogicArray":
         """Bitwise logical 'xor'"""
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        if len(self) != len(other):
-            raise ValueError("Arrays must be the same length for bitwise operations")
-        return type(self)(
-            left=1, right=len(self), value=(v ^ w for v, w in zip(self, other))
-        )
+        return self._bitwise_op(other, operator.xor)
 
     def __rxor__(self, other: object) -> "LogicArray":
         return self ^ other

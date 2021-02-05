@@ -118,12 +118,7 @@ def test_array_equality():
     assert Array(0, 3, value="test") != Array(0, -3, value="lol1")
     assert Array(0, 3, value="test") != Array(0, -4, value="test1")
     assert Array(0, 0) != [0]
-
-
-def test_array_hashability():
-    hash(Array(0, 3, value="test"))
-    with pytest.raises(TypeError):
-        hash(Array(0, 0, value=[{}]))
+    assert Array(0, 3, value="test") == "test"
 
 
 def test_repr():

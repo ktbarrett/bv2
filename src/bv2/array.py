@@ -1,6 +1,6 @@
 from typing import Optional, Any, Iterable, Iterator, overload
-from functools import cached_property, reduce
-import operator
+from functools import cached_property
+import itertools
 
 
 class Array:
@@ -228,12 +228,10 @@ class Array:
             return NotImplemented
         if len(self) != len(other):
             return False
-        if not all(v == w for v, w in zip(self, other)):
-            return False
-        return True
+        return all(v == w for v, w in zip(self, other))
 
-    def __hash__(self) -> int:
-        return reduce(operator.xor, (hash(v) for v in self))
+    def __req__(self, other: object) -> bool:
+        return self == other
 
 
 def _ascending(left: int, right: int) -> bool:
