@@ -18,11 +18,8 @@ def test_constructors():
 
 
 def test_comparison():
-    assert Logic(0) == 0
-    assert 0 == Logic(0)
+    assert Logic(0) == Logic('0')
     assert Logic(0) != Logic('X')
-    assert 'X' != Logic(1)
-    assert not ('V' == Logic('X'))
     assert Logic(0) != object()
 
 
@@ -59,29 +56,35 @@ def test_repr():
 
 
 def test_and():
-    assert Logic('0') & 'Z' == 0
-    assert 1 & Logic('1') == 1
-    assert Logic('X') & Logic('Z') == 'X'
+    assert Logic('0') & Logic('Z') == Logic(0)
+    assert Logic(1) & Logic('1') == Logic(1)
+    assert Logic('X') & Logic('Z') == Logic('X')
     with pytest.raises(TypeError):
         Logic('1') & 8
+    with pytest.raises(TypeError):
+        8 & Logic('1')
 
 
 def test_or():
-    assert Logic('1') | 'Z' == '1'
-    assert 0 | Logic('0') == 0
-    assert Logic('X') | Logic('Z') == 'X'
+    assert Logic('1') | Logic('Z') == Logic('1')
+    assert Logic(0) | Logic('0') == Logic(0)
+    assert Logic('X') | Logic('Z') == Logic('X')
     with pytest.raises(TypeError):
         8 | Logic(0)
+    with pytest.raises(TypeError):
+        Logic(0) | 8
 
 
 def test_xor():
-    assert (Logic('1') ^ True) == 0
-    assert (1 ^ Logic('X')) == 'X'
-    assert (Logic(1) ^ Logic(False)) == 1
+    assert (Logic('1') ^ Logic(True)) == Logic(0)
+    assert (Logic(1) ^ Logic('X')) == Logic('X')
+    assert (Logic(1) ^ Logic(False)) == Logic(1)
     with pytest.raises(TypeError):
         Logic(1) ^ ()
+    with pytest.raises(TypeError):
+        () ^ Logic(1)
 
 
 def test_invert():
-    assert ~Logic(0) == 1
-    assert ~Logic('Z') == 'X'
+    assert ~Logic(0) == Logic(1)
+    assert ~Logic('Z') == Logic('X')

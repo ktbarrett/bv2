@@ -1,8 +1,9 @@
-from typing import Optional
 from bv2.utils import cache
 
 
 class Logic:
+
+    __singleton_cache__ = {}
 
     _repr_map = {
         # 0 and weak 0
@@ -30,25 +31,24 @@ class Logic:
         'z': 3}
 
     @cache
-    def __new__(cls, value: Optional = None):
-        self = object.__new__(cls)
-        if isinstance(value, Logic):
-            self._repr = value._repr
-        else:
-            try:
-                self._repr = cls._repr_map[value]
-            except KeyError:
-                raise ValueError("{!r} is not a {} literal".format(value, type(self).__qualname__)) from None
-        return self
+    def __new__(cls, value=None):
+        # convert to internal representation
+        try:
+            _repr = cls._repr_map[value]
+        except KeyError:
+            raise ValueError("{!r} is not convertable to a {}".format(value, cls.__qualname__)) from None
+        # ensure only one object is made per representation
+        if _repr not in cls.__singleton_cache__:
+            obj = super().__new__(cls)
+            obj._repr = _repr
+            cls.__singleton_cache__[_repr] = obj
+        return cls.__singleton_cache__[_repr]
 
     @cache
     def __and__(self, other):
-        if not isinstance(other, Logic):
-            try:
-                other = Logic(other)
-            except ValueError:
-                return NotImplemented
-        return Logic((
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return type(self)((
             ('0', '0', '0', '0'),
             ('0', '1', 'X', 'X'),
             ('0', 'X', 'X', 'X'),
@@ -60,12 +60,9 @@ class Logic:
 
     @cache
     def __or__(self, other):
-        if not isinstance(other, Logic):
-            try:
-                other = Logic(other)
-            except ValueError:
-                return NotImplemented
-        return Logic((
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return type(self)((
             ('0', '1', 'X', 'X'),
             ('1', '1', '1', '1'),
             ('X', '1', 'X', 'X'),
@@ -77,12 +74,9 @@ class Logic:
 
     @cache
     def __xor__(self, other):
-        if not isinstance(other, Logic):
-            try:
-                other = Logic(other)
-            except ValueError:
-                return NotImplemented
-        return Logic((
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return type(self)((
             ('0', '1', 'X', 'X'),
             ('1', '0', 'X', 'X'),
             ('X', 'X', 'X', 'X'),
@@ -94,20 +88,15 @@ class Logic:
 
     @cache
     def __invert__(self):
-        return Logic(('1', '0', 'X', 'X')[self._repr])
+        return type(self)(('1', '0', 'X', 'X')[self._repr])
 
-    @cache
-    def __eq__(self, other):
-        if not isinstance(other, Logic):
-            try:
-                other = Logic(other)
-            except ValueError:
-                return NotImplemented
-        return self._repr == other._repr
+    __eq__ = object.__eq__
+
+    __hash__ = object.__hash__
 
     @cache
     def __repr__(self):
-        return "{}({!r})".format(type(self).__qualname__, str(self))
+        return "{}({!r})".format(type(self).__name__, str(self))
 
     @cache
     def __str__(self):
@@ -117,12 +106,43 @@ class Logic:
     def __bool__(self):
         if self._repr < 2:
             return bool(self._repr)
-        raise ValueError()
+        raise ValueError("Cannot convert non-0/1 {} to bool".format(type(self).__qualname__))
 
     @cache
     def __int__(self):
         if self._repr < 2:
             return self._repr
-        raise ValueError()
+        raise ValueError("Cannot convert non-0/1 {} to int".format(type(self).__qualname__))
 
-    __hash__ = object.__hash__
+
+class Bit(Logic):
+
+    # must create a separate cache for Bit
+    __singleton_cache__ = {}
+
+    _repr_map = {
+        # 0
+        False: 0,
+        0: 0,
+        '0': 0,
+        # 1
+        True: 1,
+        1: 1,
+        '1': 1}
+
+
+Logic._repr_map.update({
+    Logic('0'): 0,
+    Logic('1'): 1,
+    Logic('X'): 2,
+    Logic('Z'): 3,
+    Bit('0'): 0,
+    Bit('1'): 1
+})
+
+Bit._repr_map.update({
+    Logic('0'): 0,
+    Logic('1'): 1,
+    Bit('0'): 0,
+    Bit('1'): 1
+})
