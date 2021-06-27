@@ -7,7 +7,8 @@ from hdltypes.range import Range
 T = typing.TypeVar("T")
 
 
-class ArrayProto(typing.Sequence[T]):
+@typing.runtime_checkable
+class ArrayProto(typing.Protocol[T]):
     @abstractmethod
     def __init__(self, value: typing.Iterable[T], range: Range) -> None:
         ...
@@ -106,15 +107,18 @@ class ArrayProto(typing.Sequence[T]):
         )
 
 
-class Array(ArrayProto[typing.Any]):
-    __slots__ = ("_value", "_range")
+class _ArrayBase(ArrayProto[T]):
+    _constructor: typing.Callable[[typing.Any], T]
+
+    _value: typing.List[typing.Any]
+    _range: Range
 
     @typing.overload
-    def __init__(self, value: typing.Iterator[T], range: Range) -> None:
+    def __init__(self, value: typing.Iterable[typing.Any], range: Range) -> None:
         ...
 
     @typing.overload
-    def __init__(self, value: typing.Iterator[T]) -> None:
+    def __init__(self, value: typing.Iterable[typing.Any]) -> None:
         ...
 
     @typing.overload
@@ -122,15 +126,16 @@ class Array(ArrayProto[typing.Any]):
         ...
 
     def __init__(self, value=None, range=None):  # type: ignore
+        construct = type(self)._constructor
         if value is not None and range is not None:
-            value = list(value)
+            value = [construct(v) for v in value]
             if len(range) != len(value):
                 raise ValueError("value and range arguments must have the same length")
         elif value is not None and range is None:
-            value = list(value)
+            value = [construct(v) for v in value]
             range = Range(0, "to", len(value) - 1)
         elif value is None and range is not None:
-            value = [None] * len(range)
+            value = [construct(None) for _ in range]
         else:
             raise TypeError("must pass value, range, or both")
         self._value = value
@@ -150,11 +155,11 @@ class Array(ArrayProto[typing.Any]):
         return iter(self._value)
 
     @typing.overload
-    def __getitem__(self, item: int) -> typing.Any:
+    def __getitem__(self, item: int) -> T:
         ...
 
     @typing.overload
-    def __getitem__(self, item: slice) -> "Array":
+    def __getitem__(self, item: slice) -> "_ArrayBase[T]":
         ...
 
     def __getitem__(self, item):  # type: ignore
@@ -186,12 +191,13 @@ class Array(ArrayProto[typing.Any]):
         ...
 
     @typing.overload
-    def __setitem__(self, item: slice, value: typing.Iterator[typing.Any]) -> None:
+    def __setitem__(self, item: slice, value: typing.Iterable[typing.Any]) -> None:
         ...
 
     def __setitem__(self, item, value):  # type: ignore
+        construct = type(self)._constructor
         if isinstance(item, int):
-            self._value[self._range.index(item)] = value
+            self._value[self._range.index(item)] = construct(value)
         elif isinstance(item, slice):
             if item.start is None:
                 start = self.left
@@ -206,7 +212,7 @@ class Array(ArrayProto[typing.Any]):
             start_idx = self._range.index(start)
             stop_idx = self._range.index(stop)
             rng = Range(start, self.direction, stop)
-            value = list(value)
+            value = [construct(v) for v in value]
             if len(value) != len(rng):
                 raise ValueError("value does not fit in given bounds")
             self._value[start_idx : stop_idx + 1] = value
@@ -214,3 +220,11 @@ class Array(ArrayProto[typing.Any]):
             raise TypeError(
                 f"array indices must be ints or slices, not {type(item).__qualname__}"
             )
+
+
+class Array(_ArrayBase[typing.Any]):
+    __slots__ = ("_value", "_range")
+
+    @staticmethod
+    def _constructor(value: typing.Any) -> typing.Any:
+        return value

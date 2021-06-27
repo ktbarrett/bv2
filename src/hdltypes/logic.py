@@ -110,12 +110,15 @@ class StdLogic:
         self._repr = repr
         return self
 
-    @lru_cache(maxsize=None)
     def __new__(cls: typing.Type[Self], value: typing.Any = "U") -> Self:
         repr = _repr_table.get(value)
         if repr is None:
             raise ValueError(f"{value!r} is not a valid {cls.__qualname__}")
         return cls._make(repr)
+
+    if not typing.TYPE_CHECKING:
+        # lru_cache not supported on __new__ by mypy
+        __new__ = lru_cache(maxsize=None)(__new__)
 
     def __str__(self) -> str:
         return _str_table[self._repr]
@@ -213,12 +216,15 @@ _repr_table.update(
 class Logic(StdLogic):
     __slots__ = ()
 
-    @lru_cache(maxsize=None)
     def __new__(cls: typing.Type[Self], value: typing.Any = "X") -> Self:
         self = super().__new__(cls, value=value)  # type: ignore
         if self._repr not in {_X, _0, _1, _Z}:
             raise ValueError(f"{value!r} is not a valid {cls.__qualname__}")
         return self
+
+    if not typing.TYPE_CHECKING:
+        # lru_cache not supported on __new__ by mypy
+        __new__ = lru_cache(maxsize=None)(__new__)
 
 
 _repr_table.update(
@@ -234,12 +240,15 @@ _repr_table.update(
 class Bit(Logic):
     __slots__ = ()
 
-    @lru_cache(maxsize=None)
     def __new__(cls: typing.Type[Self], value: typing.Any = "0") -> Self:
         self = super().__new__(cls, value=value)  # type: ignore
         if self._repr not in {_0, _1}:
             raise ValueError(f"{value!r} is not a valid {cls.__qualname__}")
         return self
+
+    if not typing.TYPE_CHECKING:
+        # lru_cache not supported on __new__ by mypy
+        __new__ = lru_cache(maxsize=None)(__new__)
 
 
 _repr_table.update(

@@ -17,6 +17,8 @@ def _direction_to_step(direction: str) -> int:
 
 class Range(typing.Sequence[int]):
     __slots__ = ("_range", "_direction")
+    _range: range
+    _direction: str
 
     @typing.overload
     def __init__(self, left: int, direction: str, right: int) -> None:
