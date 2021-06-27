@@ -1,5 +1,5 @@
-from functools import lru_cache
 import typing
+from functools import lru_cache
 
 Self = typing.TypeVar("Self", bound="StdLogic")
 
@@ -195,17 +195,19 @@ class StdLogic:
         return type(self)._make(_not_table[self._repr])
 
 
-_repr_table.update({
-    StdLogic("U"): _U,
-    StdLogic("X"): _X,
-    StdLogic("0"): _0,
-    StdLogic("1"): _1,
-    StdLogic("Z"): _Z,
-    StdLogic("L"): _L,
-    StdLogic("H"): _H,
-    StdLogic("W"): _W,
-    StdLogic("-"): __,
-})
+_repr_table.update(
+    {
+        StdLogic("U"): _U,
+        StdLogic("X"): _X,
+        StdLogic("0"): _0,
+        StdLogic("1"): _1,
+        StdLogic("Z"): _Z,
+        StdLogic("L"): _L,
+        StdLogic("H"): _H,
+        StdLogic("W"): _W,
+        StdLogic("-"): __,
+    }
+)
 
 
 class Logic(StdLogic):
@@ -219,12 +221,14 @@ class Logic(StdLogic):
         return self
 
 
-_repr_table.update({
-    Logic("X"): _X,
-    Logic("0"): _0,
-    Logic("1"): _1,
-    Logic("Z"): _Z,
-})
+_repr_table.update(
+    {
+        Logic("X"): _X,
+        Logic("0"): _0,
+        Logic("1"): _1,
+        Logic("Z"): _Z,
+    }
+)
 
 
 class Bit(Logic):
@@ -238,10 +242,12 @@ class Bit(Logic):
         return self
 
 
-_repr_table.update({
-    Bit("0"): _0,
-    Bit("1"): _1,
-})
+_repr_table.update(
+    {
+        Bit("0"): _0,
+        Bit("1"): _1,
+    }
+)
 
 
 if typing.TYPE_CHECKING:

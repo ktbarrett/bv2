@@ -35,7 +35,9 @@ class Range(typing.Sequence[int]):
         elif direction is not None and right is not None:
             pass
         else:
-            raise TypeError("Range takes a left bound, right bound, and optionally a direction")
+            raise TypeError(
+                "Range takes a left bound, right bound, and optionally a direction"
+            )
         self._direction = direction
         step = _direction_to_step(direction)
         self._range = range(left, right + step, step)
@@ -79,7 +81,9 @@ class Range(typing.Sequence[int]):
             return self._range[item]
         elif isinstance(item, slice):
             return type(self).from_range(self._range[item])
-        raise TypeError(f"Range indices must be ints or slices, not {type(item).__qualname__}")
+        raise TypeError(
+            f"Range indices must be ints or slices, not {type(item).__qualname__}"
+        )
 
     def __eq__(self, other: typing.Any) -> bool:
         if type(other) is not type(self):

@@ -1,6 +1,6 @@
+import typing
 from abc import abstractmethod
 from itertools import chain
-import typing
 
 from hdltypes.range import Range
 
@@ -8,9 +8,8 @@ T = typing.TypeVar("T")
 
 
 class ArrayProto(typing.Sequence[T]):
-
     @abstractmethod
-    def __init__(self, value: typing.Iterator[T], range: Range) -> None:
+    def __init__(self, value: typing.Iterable[T], range: Range) -> None:
         ...
 
     @property  # type: ignore
@@ -44,7 +43,7 @@ class ArrayProto(typing.Sequence[T]):
         ...
 
     @typing.overload
-    def __setitem__(self, item: slice, value: typing.Iterator[T]) -> None:
+    def __setitem__(self, item: slice, value: typing.Iterable[T]) -> None:
         ...
 
     @abstractmethod
@@ -79,7 +78,7 @@ class ArrayProto(typing.Sequence[T]):
         self,
         value: typing.Any,
         start: typing.Optional[int] = None,
-        stop: typing.Optional[int] = None
+        stop: typing.Optional[int] = None,
     ) -> int:
         if start is None:
             start = self.left
@@ -103,8 +102,8 @@ class ArrayProto(typing.Sequence[T]):
 
     def __concat__(self: "ArrayProto[T]", other: "ArrayProto[T]") -> "ArrayProto[T]":
         return type(self)(
-            value=chain(self, other),
-            range=Range(0, 'to', len(self) + len(other) - 1))
+            value=chain(self, other), range=Range(0, "to", len(self) + len(other) - 1)
+        )
 
 
 class Array(ArrayProto[typing.Any]):
@@ -178,7 +177,9 @@ class Array(ArrayProto[typing.Any]):
             rng = Range(start, self.direction, stop)
             return type(self)(value=slc, range=rng)
         else:
-            raise TypeError(f"array indices must be ints or slices, not {type(item).__qualname__}")
+            raise TypeError(
+                f"array indices must be ints or slices, not {type(item).__qualname__}"
+            )
 
     @typing.overload
     def __setitem__(self, item: int, value: typing.Any) -> None:
@@ -210,4 +211,6 @@ class Array(ArrayProto[typing.Any]):
                 raise ValueError("value does not fit in given bounds")
             self._value[start_idx : stop_idx + 1] = value
         else:
-            raise TypeError(f"array indices must be ints or slices, not {type(item).__qualname__}")
+            raise TypeError(
+                f"array indices must be ints or slices, not {type(item).__qualname__}"
+            )

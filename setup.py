@@ -1,7 +1,8 @@
-from typing import Dict, Any, cast
-from setuptools import setup, find_packages
-import pathlib
 import os
+import pathlib
+from typing import Any, Dict, cast
+
+from setuptools import find_packages, setup
 
 
 def get_version(version_file: "os.PathLike[str]") -> str:
