@@ -159,7 +159,7 @@ class _ArrayBase(ArrayProto[T]):
         ...
 
     @typing.overload
-    def __getitem__(self, item: slice) -> "_ArrayBase[T]":
+    def __getitem__(self, item: slice) -> "ArrayProto[T]":
         ...
 
     def __getitem__(self, item):  # type: ignore
